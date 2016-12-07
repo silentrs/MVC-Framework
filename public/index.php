@@ -9,6 +9,5 @@ use core\classes\Route;
 
 
 Route::get('/', 'MainController::index');
-Route::get('/test/(\d+)', 'TestController::index');
 
 Route::start();

@@ -21,7 +21,7 @@ abstract class Model
                 \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC
             ];
 
-            self::$dbInstance = new \PDO(sprintf('mysql:host=%s;dbname=%s;charset=%s', 'localhost', 'framework', 'UTF8'), 'root', '', $setup);
+            self::$dbInstance = new \PDO(sprintf('mysql:host=%s;dbname=%s;charset=%s', env('db_hostname'), env('db_database'), 'UTF8'), env('db_username'), env('db_password'), $setup);
         }
 
         return self::$dbInstance;

@@ -80,7 +80,7 @@
 		private static function getRequestURI ()
 		{
 			$uri = $_SERVER['REQUEST_URI'];
-			return substr($uri, strpos($uri, '?'));
+			return substr($uri, 0, (!strpos($uri, '?')) ? strlen($uri) : strpos($uri, '?'));
 		}
 
 	}
