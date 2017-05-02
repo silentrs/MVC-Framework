@@ -8,12 +8,16 @@
 
 namespace core\classes;
 
+use core\exception\ClassNotFoundException;
+use core\interfaces\IHttp;
 
-use core\classes\http\ {
-    HttpGet,
-    HttpPost
-};
-
+/**
+ * Class HTTPFoundation
+ * @package core\classes
+ *
+ * @method static IHttp createFromGet
+ * @method static IHttp createFromPost
+ */
 class HTTPFoundation
 {
 
@@ -24,14 +28,24 @@ class HTTPFoundation
     {
     }
 
-
-    public static function createFromGet()
+    /**
+     * @param $name
+     * @param $arguments
+     * @return IHttp
+     * @throws ClassNotFoundException
+     */
+    public static function __callStatic($name, $arguments)
     {
-        return new HttpGet();
+        preg_match('/^createFrom(.*)$/', $name, $out);
+        array_shift($out);
+
+        $class = sprintf('core\classes\http\Http%s', $out[0]);
+
+        if (class_exists($class)) {
+            return new $class();
+        }
+
     }
 
-    public static function createFromPost()
-    {
-        return new HttpPost();
-    }
+
 }

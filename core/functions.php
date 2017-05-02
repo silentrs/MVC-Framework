@@ -1,8 +1,11 @@
 <?php
-
-function csrf() : string
+use Philo\Blade\Blade;
+/**
+ * @return string
+ */
+function csrf()
 {
-    return hash('md5', uniqid((time() ^ rand()) . "", true));
+    return hash('md5', uniqid((time() ^ rand()) . "Super secret string", true));
 }
 
 /**
@@ -11,18 +14,12 @@ function csrf() : string
  */
 function view($viewName, array $replace = [])
 {
-    $file = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, ROOT . '/resources/view/' . $viewName);
-    $ext = '.template.html';
+    $views = ROOT . '/resources/view';
+    $cache = ROOT . '/cache';
 
-    if (file_exists($file . $ext)) {
-        $in = array_map(function ($key) {
-            return '{' . strtoupper($key) . '}';
-        }, array_keys($replace));
+    $blade = new Blade($views, $cache);
+    echo $blade->view()->make($viewName, $replace)->render();
 
-        echo str_replace($in, $replace, file_get_contents($file . $ext));
-    } else {
-        echo $file;
-    }
 }
 
 /**
@@ -30,24 +27,40 @@ function view($viewName, array $replace = [])
  * @return mixed
  * @throws Exception
  */
-function env($section) : string
+function env($section)
 {
     static $data;
 
-    if (!isset($data) and file_exists(ROOT . '/.env')) {
+    $file = ROOT . '/.env';
 
-        foreach (file(ROOT . '/.env') as $line) {
-            $line = trim($line);
-            if (substr($line, 0, 1) === '#' or strlen($line) < 3) continue;
-            $pair = explode('=', $line);
+    if (file_exists($file)) {
 
-            $data[trim($pair[0])] = trim($pair[1]);
+        if (!isset($data)) {
+            foreach (file($file) as $line) {
+                $line = trim($line);
+                if (substr($line, 0, 1) === '#' or strpos($line, '=') === false) continue;
+
+                $pair = explode('=', $line);
+
+                $data[trim($pair[0])] = trim($pair[1]);
+            }
         }
+
+    } else {
+        throw new \Exception('Error, file .env not found or file is empty');
     }
 
     if (!array_key_exists($section, $data)) {
-        throw new \Exception('Error, file .env not found or file is emty');
+        throw new \Exception(sprintf('Error, section: "%s" not found', $section));
     }
 
     return $data[$section];
+}
+
+
+
+function location ($url, $code = 200) {
+    ob_clean();
+    http_response_code($code);
+    header(sprintf('Location: %s', $url));
 }

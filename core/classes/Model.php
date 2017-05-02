@@ -1,6 +1,7 @@
 <?php
 namespace core\classes;
 
+// TODO: переписать с использованием RedBeanPHP
 abstract class Model
 {
     protected static $table;
@@ -36,15 +37,18 @@ abstract class Model
     {
         $db = $this->getConnection();
 
-
         $stm = $db->prepare($sql);
         $stm->execute($args);
 
         return $stm;
     }
 
-
-    public function select($column, $table = null)
+    /**
+     * @param array $column
+     * @param string $table
+     * @return \PDOStatement
+     */
+    public function select(array $column, $table = null)
     {
         if (is_null($table)) {
             $table = static::$table;
@@ -54,36 +58,44 @@ abstract class Model
             $column = implode(', ', $column);
         }
 
-        $sql = sprintf('SELECT %s FROM `%s`', $column, $table);
-
-        $this->selectSql = $sql;
-
-        return $this;
-    }
-
-    public function where(array $fields)
-    {
-        $where = [];
-
-        foreach ($fields as $field => $value) {
-            $where[] = "{$field} = :{$field}";
-        }
-
-        $this->whereSql = implode(' AND ', $where);
-        $this->whereFields = $fields;
-
-        return $this;
+        return $this->query(sprintf('SELECT %s FROM `%s`', $column, $table), []);
     }
 
     /**
+     * @param array $column
+     * @param array $fields
+     * @param string $table
      * @return \PDOStatement
      */
-    public function fetch()
+    public function where(array $column, array $fields, $table = null)
     {
-        $sql = $this->selectSql;
-        $sql .= (isset($this->whereSql)) ? ' WHERE ' . $this->whereSql : '';
+        if (is_null($table)) {
+            $table = static::$table;
+        }
 
-        return $this->query((string)$sql, $this->whereFields)->fetch();
+        if (is_array($column)) {
+            $column = implode(', ', $column);
+        }
+
+        $tempPair = [];
+        foreach ($fields as $key => $value) {
+            $template = "%s=%s";
+
+            if(!is_numeric($value)) {
+                $template = "%s='%s'";
+            }
+
+            $tempPair[] = sprintf($template, $key, $value);
+        }
+
+        echo sprintf('SELECT %s FROM %s WHERE %s', $column, $table, implode(' AND ', $tempPair));
+        return $this->query(sprintf('SELECT %s FROM %s WHERE %s', $column, $table, implode(' AND ', $tempPair)), []);
     }
+
+
+    public function exec ($stm) {
+        return $this->getConnection()->exec($stm);
+    }
+
 
 }

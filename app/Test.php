@@ -11,9 +11,7 @@ class Test extends Model
     public function getUserByName($name)
     {
 
-        return $this->select('*')
-            ->where(['username' => $name])
-            ->fetch();
+        return $this->where(["*"], ['username' => $name])->fetch();
 
     }
 }
