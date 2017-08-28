@@ -15,11 +15,13 @@ class Session implements IStaticStorage
 
     public static function destroy()
     {
+        ob_flush();
         session_destroy();
-        setcookie('uid', hash('md5', '*(^)_(#@$&*)' . ')(#@*$^*)@(#'), time() + 3600, '/');
-        setcookie('PHPSESSID', null, 0);
+        setcookie('uid', hash('md5', 0), time() - 1, '/');
+        setcookie('PHPSESSID', null, time() - 1);
+
+
         self::init();
-        $_SESSION = [];
     }
 
     public static function init()
@@ -46,6 +48,10 @@ class Session implements IStaticStorage
      */
     public static function exists($key)
     {
+        if (!is_array($_SESSION)) {
+            $_SESSION = [];
+        }
+
         return array_key_exists($key, $_SESSION);
     }
 
