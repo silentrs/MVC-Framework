@@ -12,5 +12,10 @@
   "require": {
     "gabordemooij/redbean": "dev-master",
     "philo/laravel-blade": "2.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "": "./"
+    }
   }
 }

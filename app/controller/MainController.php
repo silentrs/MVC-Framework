@@ -10,8 +10,9 @@ namespace app\controller;
 
 
 use app\Test;
+use core\classes\BaseController;
 
-class MainController
+class MainController extends BaseController
 {
     public function index()
     {

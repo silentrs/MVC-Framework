@@ -17,6 +17,7 @@ use core\interfaces\IHttp;
  *
  * @method static IHttp createFromGet
  * @method static IHttp createFromPost
+ * @method static IHttp createFromCookie
  */
 class HTTPFoundation
 {

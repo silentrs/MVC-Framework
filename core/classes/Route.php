@@ -71,7 +71,7 @@ class Route
         return false;
     }
 
-    private static function getRequestURI()
+    public static function getRequestURI()
     {
         $uri = $_SERVER['REQUEST_URI'];
         return substr($uri, 0, (!strpos($uri, '?')) ? strlen($uri) : strpos($uri, '?'));

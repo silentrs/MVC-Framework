@@ -1,10 +1,12 @@
 <?php
 use Philo\Blade\Blade;
+
 /**
  * @return string
  */
 function csrf()
 {
+    // todo: add csrf to $_SESSION
     return hash('md5', uniqid((time() ^ rand()) . "Super secret string", true));
 }
 
@@ -25,7 +27,7 @@ function view($viewName, array $replace = [])
 /**
  * @param $section
  * @return mixed
- * @throws Exception
+ * @throws RuntimeException
  */
 function env($section)
 {
@@ -42,25 +44,27 @@ function env($section)
 
                 $pair = explode('=', $line);
 
-                $data[trim($pair[0])] = trim($pair[1]);
+                $data[trim($pair[0])] = trim(trim($pair[1]));
             }
         }
 
     } else {
-        throw new \Exception('Error, file .env not found or file is empty');
+        throw new \RuntimeException('Error, file .env not found');
     }
 
     if (!array_key_exists($section, $data)) {
-        throw new \Exception(sprintf('Error, section: "%s" not found', $section));
+        throw new \RuntimeException(sprintf('Error, section: "%s" not found', $section));
     }
 
     return $data[$section];
 }
 
 
-
-function location ($url, $code = 200) {
+// todo export to Header::location
+function location($url, $code = 200)
+{
     ob_clean();
     http_response_code($code);
     header(sprintf('Location: %s', $url));
+    die();
 }

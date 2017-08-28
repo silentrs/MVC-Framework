@@ -1,20 +1,19 @@
 <?php
+
 namespace core\classes;
 
-// TODO: переписать с использованием RedBeanPHP
 abstract class Model
 {
     protected static $table;
+    const SQL_AND = ' AND ';
+
     /** @var \PDO */
     private static $dbInstance = null;
-    private $selectSql;
-    private $whereSql;
-    public $whereFields;
 
     /**
      * @return \PDO
      */
-    private function getConnection()
+    protected function getConnection()
     {
         if (is_null(self::$dbInstance)) {
             $setup = [
@@ -22,7 +21,8 @@ abstract class Model
                 \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC
             ];
 
-            self::$dbInstance = new \PDO(sprintf('mysql:host=%s;dbname=%s;charset=%s', env('db_hostname'), env('db_database'), 'UTF8'), env('db_username'), env('db_password'), $setup);
+            $dsn = sprintf('mysql:host=%s;dbname=%s;charset=%s', env('db_hostname'), env('db_database'), 'UTF8');
+            self::$dbInstance = new \PDO($dsn, env('db_username'), env('db_password'), $setup);
         }
 
         return self::$dbInstance;
@@ -41,6 +41,20 @@ abstract class Model
         $stm->execute($args);
 
         return $stm;
+    }
+
+
+    /**
+     * @param $sql
+     * @param array $args
+     * @return bool
+     */
+    public function queryBool($sql, array $args = [])
+    {
+        $db = $this->getConnection();
+
+        $stm = $db->prepare($sql);
+        return $stm->execute($args);
     }
 
     /**
@@ -81,19 +95,42 @@ abstract class Model
         foreach ($fields as $key => $value) {
             $template = "%s=%s";
 
-            if(!is_numeric($value)) {
+            if (!is_numeric($value)) {
                 $template = "%s='%s'";
             }
 
             $tempPair[] = sprintf($template, $key, $value);
         }
 
-        echo sprintf('SELECT %s FROM %s WHERE %s', $column, $table, implode(' AND ', $tempPair));
-        return $this->query(sprintf('SELECT %s FROM %s WHERE %s', $column, $table, implode(' AND ', $tempPair)), []);
+        # echo sprintf('SELECT %s FROM %s WHERE %s', $column, $table, implode(self::SQL_AND, $tempPair));
+        return $this->query(sprintf('SELECT %s FROM %s WHERE %s', $column, $table, implode(self::SQL_AND, $tempPair)), []);
+    }
+
+    public function insert(array $columns, array $fields)
+    {
+        // todo: добавить возможность использования только одного аргумента ["filedName" => "value"]
+        $column = $field = [];
+        $n = count($columns);
+
+        // todo: заменить на array_walk
+        for ($i = 0; $i < $n; $i++) {
+            $column[] = '`' . $columns[$i] . '`';
+            // ассоциативный массив для подготовленых запросов
+            $field[':' . $columns[$i]] = $fields[$i];
+        }
+
+        // имена полей: id, name, age, ...
+        $columnStr = implode(', ', $column);
+
+        // имена для подготовленных запросов: :id, :name, :age, :...
+        $fieldNameStr = implode(', ', array_keys($field));
+
+        return $this->queryBool(sprintf('INSERT INTO %s (%s) VALUES (%s);', static::$table, $columnStr, $fieldNameStr), $field);
     }
 
 
-    public function exec ($stm) {
+    public function exec($stm)
+    {
         return $this->getConnection()->exec($stm);
     }
 
